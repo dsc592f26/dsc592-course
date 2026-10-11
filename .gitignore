@@ -1,0 +1,15 @@
+# Data and outputs stay out of Git (datasets live in the dsc592-data repo)
+landing/
+data/
+*.parquet
+
+# Secrets and local config
+.env
+*.pem
+.databricks/
+
+# OS and editor clutter
+.DS_Store
+.vscode/
+__pycache__/
+.ipynb_checkpoints/
