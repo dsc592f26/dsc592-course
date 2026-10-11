@@ -5,10 +5,6 @@
 If you don't have one, sign up at https://github.com. Pick a professional username: it appears on
 every commit and stays on your résumé-visible profile.
 
-Then add your **UNCW email** to your account: GitHub → Settings → Emails → Add email address.
-
-**Submit your GitHub username on the setup form** on the course site. The instructor uses it to invite
-you to the course organization and create your lab repos.
 
 ## 2b. Install Git
 
@@ -52,9 +48,3 @@ Choose **GitHub.com** → **HTTPS** → **Yes** (authenticate Git with your GitH
 
 Check: `gh auth status` should say "Logged in to github.com".
 
-## 2e. Accept the course organization invite
-
-After you submit your username, you'll get an email invitation to the **`dsc592f26`** organization.
-Accept it, or go to https://github.com/dsc592f26 and accept the banner at the top.
-
-You can't see your lab repo until you accept.
