@@ -22,6 +22,7 @@ Text after `#` is a comment, and the shell ignores it.
 | --- | --- |
 | `pwd` | **P**rint **w**orking **d**irectory: where am I? |
 | `ls` | List files in the current folder |
+| `ls -a` | List **all** files, including hidden ones (names starting with `.`, e.g. `.gitignore`) |
 | `ls -l` | Long format: permissions, owner, size, date |
 | `ls -la` | Long format **plus hidden files** (names starting with `.`, e.g. `.gitignore`) |
 | `ls -lh` | Long format with human-readable sizes (`4.0K`, `12M`) |
@@ -34,18 +35,15 @@ Text after `#` is a comment, and the shell ignores it.
 
 **Paths:** `~` is your home folder, `.` is the current folder and `..` is the parent folder. A path that starts with `/` begins at the root of the file system.
 
-**Reading `ls -l` output:**
+In `ls -l` output, the first character is `d` for a folder and `-` for a file. The `total 8` line at the top is
+disk space counted in blocks, not bytes; you can ignore it.
 
-```text
--rwxr--r--  1 may  staff   312 Oct  4 10:20 fetch_weather.sh
-│└┬┘└┬┘└┬┘     owner group  size  modified    name
-│ │  │  └ others: read only
-│ │  └ group: read only
-│ └ owner: read, write, execute
-└ type: - file, d directory
-```
+**Running two commands in a row:**
 
-The `total 8` line at the top is the disk space used, counted in blocks rather than bytes. You can ignore it.
+| Syntax | Runs the second command… | Example |
+| --- | --- | --- |
+| `a && b` | only if `a` **succeeded** | `cd .. && pwd` |
+| `a ; b` | always | `cd ..; pwd` |
 
 ---
 
@@ -70,7 +68,16 @@ cp file1 file2 file3 destination_folder/
 
 - With several sources, the destination must be an existing folder.
 - `cp` and `mv` **overwrite without asking**. Add `-i` to be asked first.
-- `rm file` deletes a file **permanently**; there is no Trash. Double-check with `ls` first.
+
+**Deleting** (permanent: there is no Trash and no undo):
+
+| Command | What it does |
+| --- | --- |
+| `rm file` | Delete a file |
+| `rm -i file` | Ask before deleting |
+| `rm *.json` | Delete all `.json` files here. Run `ls *.json` first to see what that matches |
+| `rmdir folder` | Delete an **empty** folder |
+| `rm -r folder` | Delete a folder and everything in it. Double-check the path |
 
 Example from Lab 1B (run inside your cloned repo):
 
@@ -88,7 +95,7 @@ cp ~/dsc592/lab1/shell_answers.md ~/dsc592/lab1/fetch_weather.sh .
 | `head -n 3 file` | First 3 lines |
 | `tail -n 2 file` | Last 2 lines |
 | `tail -n +2 file` | Everything **from line 2 on** (skips a header row) |
-| `wc -l file` | Count lines |
+| `wc -l file` | Count lines (`wc` = word count; `-w` words, `-c` bytes) |
 | `less file` | Scroll through a big file (`q` to quit) |
 
 ```bash
@@ -134,9 +141,14 @@ printf "landing/\n*.json\n.env\n" > .gitignore  # several lines at once
 | `grep "text" file` | Show lines containing `text` |
 | `grep -i "text" file` | Same, ignoring upper/lower case |
 | `grep -c "text" file` | Count matching lines |
+| `grep -n "text" file` | Show line numbers too |
+| `grep -v "text" file` | Show lines that do **not** match |
 | `find landing -type f` | List every **file** under `landing`, including subfolders |
 | `find landing -type d` | List every **folder** under `landing` |
 | `find landing -name '*.json'` | Files whose name matches a pattern (keep the quotes) |
+| `find landing -iname '*wilmington*'` | Same, ignoring upper/lower case |
+
+`grep` matches text **anywhere on the line**, and it prints **every** matching line, not just the first.
 
 ---
 
@@ -175,7 +187,7 @@ curl -s "https://api.open-meteo.com/v1/forecast?latitude=34.23&longitude=-77.94&
 | `-O` (capital) | Save using the name from the URL. **Not the same as `-o`** |
 | `-f` | Fail on HTTP errors instead of saving the error page |
 
-**Safe default for scripts:** `curl -fsSL -o file "URL"`.
+**Safe default for scripts:** `curl -fsSL -o file "URL"`. One-letter flags can be combined (`-sLo file`); a flag that takes a value, like `-o`, must come last in the group.
 
 **Reading an API URL:**
 
@@ -198,6 +210,10 @@ curl -s "$URL"                                 # $URL is replaced by its value
 DIR=landing/weather/$(date -u +%Y/%m/%d/%H)    # $( ... ) runs a command and pastes its output
 mkdir -p "$DIR"                                # e.g. landing/weather/2026/10/09/14
 curl -s -o "$DIR/wilmington.json" "$URL"
+echo "$DIR"                                    # check a variable's value
+
+F=$(find landing -name '*.json' | head -n 1)   # save the first JSON file's path in F
+cat "$F"
 ```
 
 | Syntax | Meaning |
@@ -228,6 +244,14 @@ env | grep -E '^(CITY|LAT|LON)='      # list your variables
 unset CITY                            # remove it
 ```
 
+| | Called | Who can see it |
+| --- | --- | --- |
+| `CITY=Wilmington` | shell variable | only this shell |
+| `export CITY=Wilmington` | **environment** variable | this shell **and** programs it starts (scripts, `python`) |
+
+For commands you type yourself, like `curl -s "$URL"`, plain `NAME=value` is enough: the shell fills in the value
+before running `curl`. You need `export` only when a separate program must read the variable itself.
+
 - Variables last only for the current terminal window.
 - To keep one permanently, add the `export` line to `~/.zshrc` (macOS) or `~/.bashrc` (Ubuntu/WSL).
 - **Never hard-code or commit API keys.** Keep them in environment variables or in an untracked `.env` file
@@ -235,7 +259,7 @@ unset CITY                            # remove it
 
 ---
 
-## 11. Scripts and permissions
+## 11. Scripts
 
 ```bash
 cat > fetch_weather.sh <<'EOF'
@@ -249,9 +273,12 @@ curl -s -o "$OUT/${LAT}_${LON}.json" \
 echo "wrote $OUT/${LAT}_${LON}.json"
 EOF
 
-chmod u+x fetch_weather.sh       # let the owner (you) execute it; here the same as chmod 744
-./fetch_weather.sh 40.71 -74.01  # run it with two arguments
+bash fetch_weather.sh 40.71 -74.01   # run it with bash, passing LAT and LON
 ```
+
+**Writing the file:** after the first line (`cat > ... <<'EOF'`), type or paste the script lines, then a line with
+only `EOF` to finish. If pasting goes wrong, press Ctrl+C and write the file in an editor instead:
+`nano fetch_weather.sh` (save with Ctrl+O, Enter; quit with Ctrl+X) or `code fetch_weather.sh` (VS Code).
 
 | Piece | Meaning |
 | --- | --- |
@@ -261,31 +288,11 @@ chmod u+x fetch_weather.sh       # let the owner (you) execute it; here the same
 | `${1:?message}` | Stop with `message` if argument 1 is missing |
 | `cat > file <<'EOF' ... EOF` | Write the lines in between into `file` |
 | `\` at the end of a line | Continue the command on the next line (no space after it!) |
-| `./script.sh` | Run a script in the current folder |
-
-**Permissions as numbers:** read = 4, write = 2, execute = 1, with one digit each for owner, group and others.
-`chmod 744` gives the owner `rwx` (7), the group `r--` (4) and others `r--` (4).
+| `bash script.sh` | Run a script with bash (no special file permissions needed) |
 
 ---
 
-## 12. Cron schedules (reading only)
-
-```text
-┌─ minute (0–59)
-│ ┌─ hour (0–23)
-│ │ ┌─ day of month (1–31)
-│ │ │ ┌─ month (1–12)
-│ │ │ │ ┌─ day of week (0–6, Sunday = 0)
-0 * * * *      every hour, on the hour
-*/15 * * * *   every 15 minutes
-30 6 * * 1-5   6:30 am, Monday–Friday
-```
-
-Databricks Jobs use **Quartz** cron, which adds a seconds field and uses `?`. Hourly is `0 0 * * * ?` (Lecture 22).
-
----
-
-## 13. Keyboard shortcuts
+## 12. Keyboard shortcuts
 
 | Keys | What it does |
 | --- | --- |
@@ -299,7 +306,7 @@ Databricks Jobs use **Quartz** cron, which adds a seconds field and uses `?`. Ho
 
 ---
 
-## 14. bash vs zsh
+## 13. bash vs zsh
 
 | | bash | zsh |
 | --- | --- | --- |
@@ -311,14 +318,17 @@ Check yours with `echo $SHELL`. Course scripts start with `#!/usr/bin/env bash`,
 
 ---
 
-## 15. Common mistakes
+## 14. Common mistakes
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | `zsh: no matches found` | URL not in quotes | Put the URL in `"double quotes"` |
 | `curl: (6) Could not resolve host: landing` | `-O` instead of `-o`, or `-o` missing | Put `-o` (lowercase) right before the file name |
 | `curl: (23) Failure writing output` | The target folder doesn't exist | `mkdir -p` the folder first |
-| `Permission denied` when running a script | The file isn't executable | `chmod u+x script.sh` |
+| `permission denied: ./script.sh` | The file isn't marked executable | Run it as `bash script.sh` |
+| A `heredoc>` prompt that never ends | The closing `EOF` line is missing or has extra spaces | Press Ctrl+C; write the file in `nano` or VS Code |
+| Words split onto separate lines after pasting (e.g. `fetch`, `_`, `weather.sh`) | Copied from a PDF | Copy from the Markdown on GitHub, or retype |
+| `$'\r': command not found` | The script was saved with Windows line endings | Recreate the file in the terminal or in VS Code with "LF" line endings |
 | `command not found` after setting `PATH=...` | You overwrote the system `PATH` | Open a new terminal; use lowercase names for your own variables |
 | A `>` prompt appears | Unclosed quote, or a space after `\` | Press Ctrl+C and retype |
 | `cd..` fails | Missing space | `cd ..` |
