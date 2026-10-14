@@ -49,7 +49,38 @@ The `total 8` line at the top is the disk space used, counted in blocks rather t
 
 ---
 
-## 3. Looking at files
+## 3. Copying, moving and renaming
+
+For `cp` and `mv`, the **last argument is always the destination**; everything before it is a source.
+
+```bash
+cp source destination
+cp file1 file2 file3 destination_folder/
+```
+
+| Command | What it does |
+| --- | --- |
+| `cp notes.md backup/` | Copy into an existing folder (keeps the name `notes.md`) |
+| `cp notes.md notes_old.md` | Make a copy with a new name |
+| `cp a.md b.sh .` | Copy two files into the current folder (`.`) |
+| `cp -r landing backup/` | Copy a **folder** and everything in it (`-r` = recursive) |
+| `cp -i notes.md backup/` | Ask before overwriting an existing file |
+| `mv old.md new.md` | **Rename** a file |
+| `mv file1 file2 folder/` | **Move** files into a folder |
+
+- With several sources, the destination must be an existing folder.
+- `cp` and `mv` **overwrite without asking**. Add `-i` to be asked first.
+- `rm file` deletes a file **permanently**; there is no Trash. Double-check with `ls` first.
+
+Example from Lab 1B (run inside your cloned repo):
+
+```bash
+cp ~/dsc592/lab1/shell_answers.md ~/dsc592/lab1/fetch_weather.sh .
+```
+
+---
+
+## 4. Looking at files
 
 | Command | What it does |
 | --- | --- |
@@ -67,7 +98,7 @@ tail -n +2 cities.csv | wc -l    # 10: data rows only
 
 ---
 
-## 4. Printing and writing to files
+## 5. Printing and writing to files
 
 `echo` prints whatever you give it. Use it to check a variable's value or to print status messages in scripts.
 
@@ -96,7 +127,7 @@ printf "landing/\n*.json\n.env\n" > .gitignore  # several lines at once
 
 ---
 
-## 5. Searching
+## 6. Searching
 
 | Command | What it does |
 | --- | --- |
@@ -109,7 +140,7 @@ printf "landing/\n*.json\n.env\n" > .gitignore  # several lines at once
 
 ---
 
-## 6. Pipes: combine small tools
+## 7. Pipes: combine small tools
 
 A **pipe** `|` sends the output of one command into the next.
 
@@ -128,7 +159,7 @@ find landing -name '*.json' | sort | tail -n 1     # newest file (landing paths 
 
 ---
 
-## 7. Downloading with `curl`
+## 8. Downloading with `curl`
 
 ```bash
 curl -sL -o cities.csv https://raw.githubusercontent.com/dsc592f26/dsc592-data/main/cities.csv
@@ -158,7 +189,7 @@ Always put URLs in **double quotes**. In zsh (macOS), an unquoted `?` gives the 
 
 ---
 
-## 8. Variables and `$`
+## 9. Variables and `$`
 
 ```bash
 URL="https://api.open-meteo.com/v1/forecast?latitude=34.23&longitude=-77.94&current=temperature_2m"
@@ -186,7 +217,7 @@ for variables inside scripts, so you never overwrite a system variable like `PAT
 
 ---
 
-## 9. Environment variables
+## 10. Environment variables
 
 ```bash
 echo $HOME $USER $PATH $SHELL        # built-in variables
@@ -204,7 +235,7 @@ unset CITY                            # remove it
 
 ---
 
-## 10. Scripts and permissions
+## 11. Scripts and permissions
 
 ```bash
 cat > fetch_weather.sh <<'EOF'
@@ -237,7 +268,7 @@ chmod u+x fetch_weather.sh       # let the owner (you) execute it; here the same
 
 ---
 
-## 11. Cron schedules (reading only)
+## 12. Cron schedules (reading only)
 
 ```text
 ┌─ minute (0–59)
@@ -254,7 +285,7 @@ Databricks Jobs use **Quartz** cron, which adds a seconds field and uses `?`. Ho
 
 ---
 
-## 12. Keyboard shortcuts
+## 13. Keyboard shortcuts
 
 | Keys | What it does |
 | --- | --- |
@@ -268,7 +299,7 @@ Databricks Jobs use **Quartz** cron, which adds a seconds field and uses `?`. Ho
 
 ---
 
-## 13. bash vs zsh
+## 14. bash vs zsh
 
 | | bash | zsh |
 | --- | --- | --- |
@@ -280,7 +311,7 @@ Check yours with `echo $SHELL`. Course scripts start with `#!/usr/bin/env bash`,
 
 ---
 
-## 14. Common mistakes
+## 15. Common mistakes
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
